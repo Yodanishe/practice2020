@@ -70,7 +70,6 @@ struct trie *trie_insert(struct trie *root, char *key, char *value)
 	return root;
 }
 
-//FIXME Не стирает ключ среднего элемента
 struct trie *trie_delete(struct trie *root, char *key)
 {
 	int found;
