@@ -6,29 +6,161 @@ struct trie *trie_create()
 	if ( (node = malloc(sizeof(*node))) == NULL)
 		return NULL;
 	node->ch = '\0';
+	node->check = 0;
 	node->value = NULL;
 	node->sibling = NULL;
 	node->child = NULL;
 	return node;
 }
 
-char *trie_lookup(struct trie *root, char *key)
+void trie_fuzzy_matching(struct trie *root, char *key, char *check, int i, int prs)
 {
-	struct trie *node, *list;
-	for (list = root; *key != '\0'; key++)
+	struct trie *node;
+	for (node = root; node != NULL; node = node->sibling)
 	{
-		for (node = list; node != NULL; node = node->sibling)
+		check[i] = node->ch;
+		if ((node->value != NULL) && (node->check == 0))
 		{
-			if (node->ch == *key)
-				break;
+			int j = find(key, check, i, prs);
+			if(j == 1)
+			{
+				node->check = 1;
+				for(int k = i; k >= 0; k--)
+					printf("%c", check[i - k]);
+				printf("\n");
+			}
 		}
-		if (node != NULL)
-			list = node->child;
-		else
-			return NULL;
+		if (node->child != NULL)
+			trie_fuzzy_matching(node->child, key, check, i + 1, prs);
 	}
-	/* Check: Node must be a leaf node! */
-	return node->value;
+}
+
+int find(char *key, char *check, int k, int prs)
+{
+	int num = strlen(key);
+	int buf = k + 1;
+	int miss = 0;
+	switch(prs)
+	{
+		case 0:
+			if(buf - num == 0)
+			{
+				for(int i = 0; i < buf; i++)
+				{
+					*key = tolower(*key);
+					*check = tolower(*check);
+					if(*check == *key)
+					{
+						key++;
+						check++;
+						num--;
+					}
+				}
+				if(num == 0)
+				{
+					return 1;	
+				} else {
+					return 0;
+				}
+			}
+			return 0;
+		case 1:
+			if(buf - num == 1)
+			{
+				for(int i = 0; i < buf; i++)
+				{
+					if(*check == *key)
+					{
+						key++;
+						check++;
+						num--;
+					}
+				}
+				if(num == 0)
+				{
+					return 1;	
+				} else {
+					return 0;
+				}
+			} 
+			return 0;
+		case 2:
+			if(buf - num == 2)
+			{
+				for(int i = 0; i < buf; i++)
+				{
+					if(*check == *key)
+					{
+						key++;
+						check++;
+						num--;
+					}
+				}
+				if(num == 0)
+				{
+					return 1;	
+				} else {
+					return 0;
+				}
+			} 
+			return 0;
+		case 3:
+			for(int i = 0; i < buf; i++)
+			{
+				if(*check == *key)
+				{
+					key++;
+					check++;
+					num--;
+				}
+			}
+			if(num == 0)
+			{
+				return 1;	
+			} else {
+				return 0;
+			}
+			return 0;
+		case 4:
+			while(*check != *key)
+			{
+				check++;
+				miss++;
+			}
+			for(int i = 0; i < buf - miss; i++)
+			{
+				if(*check == *key)
+				{
+					key++;
+					num--;
+					check++;
+				}
+			}
+			if(num == 0)
+			{
+				return 1;	
+			} else {
+				return 0;
+			}
+			return 0;
+		case 5:
+			for(int i = 0; i < buf; i++)
+			{
+				if(*check == *key)
+				{
+					key++;
+					num--;
+				}
+				check++;
+			}
+			if(num < 1)
+			{
+				return 1;	
+			} else {
+				return 0;
+			}
+			return 0;
+	}
 }
 
 struct trie *trie_insert(struct trie *root, char *key, char *value)
@@ -38,7 +170,6 @@ struct trie *trie_insert(struct trie *root, char *key, char *value)
 	list = root;
 	for (; *key != '\0'; key++)
 	{
-		/* Lookup sibling node */
 		for (node = list; node != NULL; node = node->sibling)
 		{
 			if (node->ch == *key)
@@ -46,7 +177,6 @@ struct trie *trie_insert(struct trie *root, char *key, char *value)
 		}
 		if (node == NULL)
 		{
-			/* Node not found. Add new node */
 			node = trie_create();
 			node->ch = *key;
 			node->sibling = list;
@@ -58,125 +188,23 @@ struct trie *trie_insert(struct trie *root, char *key, char *value)
 		}
 		else
 		{
-			/* Node found. Move to next level */
 			list = node->child;
 		}
 		parent = node;
 	}
-	/* Update value in leaf */
 	if (node->value != NULL)
 		free(node->value);
 	node->value = strdup(value);
 	return root;
 }
 
-//FIXME Не стирает ключ среднего элемента
-struct trie *trie_delete(struct trie *root, char *key)
-{
-	int found;
-	return trie_delete_dfs(root, NULL, key, &found);
-}
-
-struct trie *trie_delete_dfs(struct trie *root, struct trie *parent, char *key, int *found)
-{
-	struct trie *node, *prev = NULL;
-	*found = (*key == '\0' && root == NULL) ? 1 : 0;
-	if (root == NULL || *key == '\0')
-		return root;
-	for (node = root; node != NULL; node = node->sibling)
-	{
-		if (node->ch == *key)
-			break;
-		prev = node;
-	}
-	if (node == NULL)
-		return root;
-	trie_delete_dfs(node->child, node, key + 1, found);
-	if (*found > 0 && node->child == NULL)
-	{
-		/* Delete node */
-		if (prev != NULL)
-			prev->sibling = node->sibling;
-		else
-		{
-			if (parent != NULL)
-			parent->child = node->sibling;
-			else
-			root = node->sibling;
-		}
-		free(node->value);
-		free(node);
-	}
-	return root;
-}
-
-void trie_print(struct trie *root, int level)
+void reset(struct trie *root)
 {
 	struct trie *node;
-	int i;
 	for (node = root; node != NULL; node = node->sibling)
 	{
-		for (i = 0; i < level; i++)
-			printf(" ");
-		if (node->value != NULL)
-			printf("%c (%s)\n", node->ch, node->value);
-		else
-			printf("%c \n", node->ch);
+		node->check = 0;
 		if (node->child != NULL)
-			trie_print(node->child, level + 1);
+			reset(node->child);
 	}
-}
-
-int trie_find(struct trie *root, char *key)
-{
-	void trie_print2(struct trie *root, int level)
-	{
-		struct trie *node;
-		int i;
-		for (node = root; (node != NULL) && (node >= root); node = node->sibling)
-		{
-			for (i = 0; i < level; i++)
-				printf(" ");
-			if (node->value != NULL)
-				printf("%c (%s)\n", node->ch, node->value);
-			else
-				printf("%c \n", node->ch);
-			if (node->child != NULL)
-				trie_print(node->child, level + 1);
-		}
-	}
-	void mytrie_print(struct trie *root, char *key)
-	{
-		struct trie *node;
-		for (node = root; (node != NULL) && (node >= root); node = node->sibling)
-		{
-			if (node->value != NULL)
-			{
-				printf("%c (%s)\n", node->ch, node->value);
-			}
-			else
-			{
-				printf("%c", node->ch);
-			}	
-			if (node->child != NULL)
-			{
-				mytrie_print(node->child, key);
-			}
-		}
-	}
-	struct trie *node, *list;
-	for (list = root; *key != '\0'; key++)
-	{
-		for (node = list; node != NULL; node = node->sibling)
-		{
-			if (node->ch == *key)
-				break;
-		}
-		if (node != NULL)
-			list = node->child;
-		else
-			return -1;
-	}
-	trie_print2(node, 0);
-	return 0;
 }

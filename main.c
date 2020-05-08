@@ -1,26 +1,25 @@
 #include <stdio.h>
 #include <stdint.h>
+#include <ctype.h>
 #include "trie.h"
 
-#define WordsCount 80368
+#define WordsCount 80369
 char *Words[WordsCount];
 char *UserWords[1000];
 char *UserVol[1000];
 
-void Read(char *IFILE)
+int Read(char *IFILE)
 {
 	char word[100]= {' '};
 	uint32_t CountWord = 0, CountSpace = 0;
 	FILE* f;
-	printf("\tОткрытие файла: %s\n", IFILE);
-	// Попытка открыть файл
+	printf("\tOpen dictionary: %s\n", IFILE);
 	if((f = fopen(IFILE, "r")) == NULL)
 	{
-		// Провалилась
 		perror("fopen");
 		exit(1);
 	}
-	printf("\tЧтение файла\n");
+	printf("\tRead dictionary\n");
 	register int inWord = 0;
 	int c;
 	int WLen = 0;
@@ -49,13 +48,12 @@ void Read(char *IFILE)
 			}
 		}
 	}
-	printf("\tФайл прочитан. Содержит %d слов.\n", CountWord);
+	printf("\tDictionary contain %d words.\n", CountWord);
+	return CountWord;
 }
 
-/* itoa:  конвертируем n в символы в s */
 void mitoa(int n, char s[])
 {
-	/* reverse:  переворачиваем строку s на месте */
 	void reverse(char s[])
 	{
 		int i, j;
@@ -67,89 +65,45 @@ void mitoa(int n, char s[])
 		}
 	}
 	int i, sign; 
-	if ((sign = n) < 0)  /* записываем знак */
-		n = -n;          /* делаем n положительным числом */
+	if ((sign = n) < 0)
+		n = -n;      
 	i = 0;
-	do {       /* генерируем цифры в обратном порядке */
-		s[i++] = n % 10 + '0';   /* берем следующую цифру */
-	} while ((n /= 10) > 0);     /* удаляем */
+	do { 
+		s[i++] = n % 10 + '0';  
+	} while ((n /= 10) > 0); 
 	if (sign < 0)
 		s[i++] = '-';
 	s[i] = '\0';
 	reverse(s);
 }
 
-int menu()
-{
-	int req;
-	printf(" 1 Добавить слово\n");
-	printf(" 2 Найти слово\n");
-	printf(" 3 Удалить слово\n");
-	printf(" 4 Дополнить слово\n");
-	printf(" 5 Вывод всего дерева (большой вывод)\n");
-	printf(" 0 Выход\n? ");
-	scanf("%d", &req);
-	return req;
-}
-
 int main(int argc, char **argv)
-{
-	// Загрузка словаря
-	Read("dictionary.txt");
+{	
+	int count = Read("dictionary.txt");
 	struct trie *root;
 	int i, req = -1, zz = 0;
 	root = trie_insert(NULL, Words[0], "0");
-//root = trie_insert(NULL, "0", "0");
-	// Построение структуры
+
 	for (i = 1; i < WordsCount; i++)
 	{
 		char str[10];
 		mitoa(i, str);
 		root = trie_insert(root, Words[i], str);
 	}
-	// Взаимодействие с пользователем
 	
-	while (req)
+	while (1)
 	{
 		printf("\n\n\n\n===============================================\n");
-		req = menu();
-		switch(req)
-		{
 			char buf[25];
-			case 1:
-				UserWords[zz] = (char*)malloc((100 + 1) * sizeof(char));
-				UserVol[zz] = (char*)malloc((100 + 1) * sizeof(char));
-				printf(" Введите строку: ");
-				scanf("%s", UserWords[zz]);
-				printf(" Введите значение: ");
-				scanf("%s", UserVol[zz]);
-			
-				root = trie_insert(root, UserWords[zz], UserVol[zz]);
-				req = -1;
-				zz++;
-				break;
-			case 2:
-				printf(" Введите искомую строку: ");
-				scanf("%s", buf);
-				printf("Искомая строка содержит ключ: %s\n", trie_lookup(root, buf));
-				req = -1;
-				break;
-			case 3:
-				printf(" Введите удаляемое слово: ");
-				scanf("%s", buf);
-				root = trie_delete(root, buf);
-				req = -1;
-				break;
-			case 4:
-				printf(" Введите дополняемое слово: ");
-				scanf("%s", buf);
-				trie_find(root, buf);
-				req = -1;
-				break;
-			case 5:
-				trie_print(root, 0);
-				break;
-		}
+			char check[25];
+			printf(" Enter word to fuzzy matching: ");
+			scanf("%24s", buf);
+			trie_fuzzy_matching(root, buf, check, 0, 0);
+			for(int i = 1; i < 6; i++)
+				if(strlen(buf) > (i + 2) / 3)
+					trie_fuzzy_matching(root, buf, check, 0, i);
+			reset(root);
 	}
 	return 0;
 }
+

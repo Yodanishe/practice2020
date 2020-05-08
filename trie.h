@@ -9,16 +9,15 @@
 struct trie {
 	char *value;
 	char ch;
+	char check;
 	struct trie *sibling;
 	struct trie *child;
 };
 
 struct trie *trie_create();
-char *trie_lookup(struct trie *root, char *key);
+void trie_fuzzy_matching(struct trie *root, char *key, char *check, int i, int prs);
+int find(char *key, char *check, int k, int prs);
 struct trie *trie_insert(struct trie *root, char *key, char *value);
-struct trie *trie_delete(struct trie *root, char *key);
-struct trie *trie_delete_dfs(struct trie *root, struct trie *parent, char *key, int *found);
-void trie_print(struct trie *root, int level);
-int trie_find(struct trie *root, char *key);
+void reset(struct trie *root);
 
 #endif
