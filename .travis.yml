@@ -1,4 +1,4 @@
 dist: xenial
 language: c
 compiler : gcc
-script: make && git ls-files | xargs clang-format -i && git diff --exit-code && ./main
+script: make && git ls-files | xargs clang-format -i && git diff --exit-code
