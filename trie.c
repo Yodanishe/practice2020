@@ -198,6 +198,7 @@ struct trie *trie_insert(struct trie *root, char *key, char *value)
 	return root;
 }
 
+
 void reset(struct trie *root)
 {
 	struct trie *node;
