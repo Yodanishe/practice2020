@@ -88,7 +88,7 @@ int main() {
     scanf("%24s", buf);
     printf("\n");
     num = trie_fuzzy_matching(root, buf, check, 0, 0, num);
-    for (int i = 1; i < 7; i++)
+    for (int i = 1; i < 6; i++)
       num = trie_fuzzy_matching(root, buf, check, 0, i, num);
     if (num == 0)
       printf("\nYour request was not found");
