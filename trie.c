@@ -154,29 +154,6 @@ int find(char *key, char *check, int k, int prs) {
       }
     } else
       return 0;
-  case 6:
-    if (buf - num == 0) {
-      for (int j = num; j > 0; j--) {
-        miss = 0;
-        for (int i = 0; i < buf; i++) {
-          if (*check == *key) {
-            num--;
-            break;
-          }
-          miss++;
-          check++;
-        }
-        key++;
-        for (int i = 0; i < miss; i++)
-          check--;
-      }
-      if (num == 1) {
-        return 1;
-      } else {
-        return 0;
-      }
-    } else
-      return 0;
   }
 }
 
