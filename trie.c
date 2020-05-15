@@ -12,14 +12,19 @@ struct trie *trie_create() {
   return node;
 }
 
-void trie_fuzzy_matching(struct trie *root, char *key, char *check, int i,
-                         int prs) {
+int trie_fuzzy_matching(struct trie *root, char *key, char *check, int i,
+                        int prs, int num) {
+  if (num > 15)
+    if ((num > 25) || (prs < 4))
+      if ((num > 30) || (prs < 6))
+        return num;
   struct trie *node;
   for (node = root; node != NULL; node = node->sibling) {
     check[i] = node->ch;
     if ((node->value != NULL) && (node->check == 0)) {
       int j = find(key, check, i, prs);
       if (j == 1) {
+        num++;
         node->check = 1;
         for (int k = i; k >= 0; k--)
           printf("%c", check[i - k]);
@@ -27,8 +32,9 @@ void trie_fuzzy_matching(struct trie *root, char *key, char *check, int i,
       }
     }
     if (node->child != NULL)
-      trie_fuzzy_matching(node->child, key, check, i + 1, prs);
+      num = trie_fuzzy_matching(node->child, key, check, i + 1, prs, num);
   }
+  return num;
 }
 
 int find(char *key, char *check, int k, int prs) {
@@ -87,51 +93,90 @@ int find(char *key, char *check, int k, int prs) {
     }
     return 0;
   case 3:
-    for (int i = 0; i < buf; i++) {
-      if (*check == *key) {
-        key++;
-        check++;
-        num--;
+    if (buf - num < 5) {
+      for (int i = 0; i < buf; i++) {
+        if (*check == *key) {
+          key++;
+          check++;
+          num--;
+        }
       }
-    }
-    if (num == 0) {
-      return 1;
-    } else {
-      return 0;
+      if (num == 0) {
+        return 1;
+      } else {
+        return 0;
+      }
     }
     return 0;
   case 4:
-    while (*check != *key) {
-      check++;
-      miss++;
-    }
-    for (int i = 0; i < buf - miss; i++) {
-      if (*check == *key) {
+    if (buf - num == 0) {
+      for (int j = num; j > 0; j--) {
+        miss = 0;
+        for (int i = 0; i < buf; i++) {
+          if (*check == *key) {
+            num--;
+            break;
+          }
+          miss++;
+          check++;
+        }
         key++;
-        num--;
-        check++;
+        for (int i = 0; i < miss; i++)
+          check--;
       }
-    }
-    if (num == 0) {
-      return 1;
-    } else {
+      if (num == 0) {
+        return 1;
+      } else {
+        return 0;
+      }
+    } else
       return 0;
-    }
-    return 0;
   case 5:
-    for (int i = 0; i < buf; i++) {
-      if (*check == *key) {
+    if (buf - num == 0) {
+      for (int j = num; j > 0; j--) {
+        miss = 0;
+        for (int i = 0; i < buf; i++) {
+          if (*check == *key) {
+            num--;
+            break;
+          }
+          miss++;
+          check++;
+        }
         key++;
-        num--;
+        for (int i = 0; i < miss; i++)
+          check--;
       }
-      check++;
-    }
-    if (num < 1) {
-      return 1;
-    } else {
+      if (num == 1) {
+        return 1;
+      } else {
+        return 0;
+      }
+    } else
       return 0;
-    }
-    return 0;
+  case 6:
+    if (buf - num == 0) {
+      for (int j = num; j > 0; j--) {
+        miss = 0;
+        for (int i = 0; i < buf; i++) {
+          if (*check == *key) {
+            num--;
+            break;
+          }
+          miss++;
+          check++;
+        }
+        key++;
+        for (int i = 0; i < miss; i++)
+          check--;
+      }
+      if (num == 1) {
+        return 1;
+      } else {
+        return 0;
+      }
+    } else
+      return 0;
   }
 }
 

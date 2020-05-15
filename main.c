@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#define WordsCount 80369
+#define WordsCount 100000
 char *Words[WordsCount];
 char *UserWords[1000];
 char *UserVol[1000];
@@ -69,26 +69,31 @@ void mitoa(int n, char s[]) {
 
 int main() {
   int count = Read("dictionary.txt");
+  int num = 0;
   struct trie *root;
-  int i, req = -1, zz = 0;
+  int i;
   root = trie_insert(NULL, Words[0], "0");
 
-  for (i = 1; i < WordsCount; i++) {
-    char str[10];
+  for (i = 1; i < WordsCount - (WordsCount - count + 1); i++) {
+    char str[20];
     mitoa(i, str);
     root = trie_insert(root, Words[i], str);
   }
 
   while (1) {
-    printf("\n\n\n\n===============================================\n");
+    printf("\n\n===============================================\n");
     char buf[25];
     char check[25];
     printf(" Enter word to fuzzy matching: ");
     scanf("%24s", buf);
-    trie_fuzzy_matching(root, buf, check, 0, 0);
-    for (int i = 1; i < 6; i++)
-      if (strlen(buf) > (i + 2) / 3)
-        trie_fuzzy_matching(root, buf, check, 0, i);
+    printf("\n");
+    num = trie_fuzzy_matching(root, buf, check, 0, 0, num);
+    for (int i = 1; i < 7; i++)
+      if (strlen(buf) / i >= i / strlen(buf))
+        num = trie_fuzzy_matching(root, buf, check, 0, i, num);
+    if (num == 0)
+      printf("\nYour request was not found");
+    num = 0;
     reset(root);
   }
   return 0;
