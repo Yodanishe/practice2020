@@ -89,8 +89,7 @@ int main() {
     printf("\n");
     num = trie_fuzzy_matching(root, buf, check, 0, 0, num);
     for (int i = 1; i < 7; i++)
-      if (strlen(buf) / i >= i / strlen(buf))
-        num = trie_fuzzy_matching(root, buf, check, 0, i, num);
+      num = trie_fuzzy_matching(root, buf, check, 0, i, num);
     if (num == 0)
       printf("\nYour request was not found");
     num = 0;
